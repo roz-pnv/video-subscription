@@ -1,1 +1,2 @@
 .env
+/video_subscription/db.sqlite3
