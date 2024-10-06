@@ -8,10 +8,10 @@ class Profile(models.Model):
         on_delete=models.CASCADE,
     )
     phone = models.CharField(
-        max_length=10,
+        max_length=11,
         validators=[
             RegexValidator(
-                regex=r'^0[0-9]{9}$',
+                regex=r'^09\d{9}$',
                 message='Invalid phone number.'
             ),
         ],
@@ -34,4 +34,3 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.username
-

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import timedelta
+from django.core.validators import MaxValueValidator
 
 class Actor(models.Model):
     first_name = models.CharField(max_length=255)
@@ -37,6 +38,7 @@ class Video(models.Model):
     description = models.TextField()
     name = models.CharField(max_length=255)
     video_url = models.URLField(max_length=2048)
+    is_subscription_needed = models.BooleanField(default=False)
     duration = models.IntegerField()
     languages_id = models.ManyToManyField(Language)
     director_id = models.ManyToManyField(Director)
@@ -112,7 +114,25 @@ class History(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
+    rating = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(5)],
+        null=True,
+        blank=True,
+    )
     watch_date = models.DateTimeField()
 
     def __str__(self):
         return f'{self.user_id} watch {self.video_id} at {self.watch_date}.'
+
+
+class Comment(models.Model):
+    video_id = models.ForeignKey(
+        Video,
+        on_delete=models.CASCADE,
+    )
+    user_id = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
