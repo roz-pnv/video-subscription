@@ -41,13 +41,17 @@ class Video(models.Model):
     is_subscription_needed = models.BooleanField(default=False)
     duration = models.IntegerField()
     languages_id = models.ManyToManyField(Language)
-    director_id = models.ManyToManyField(Director)
+    director_id = models.ForeignKey(
+        Director, 
+        related_name='works', 
+        on_delete=models.CASCADE,
+    )
     actors_id = models.ManyToManyField(Actor)
     categories_id = models.ManyToManyField(Category)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.name
+        return '%s: %d' % (self.name, self.duration)
 
 
 class Subscription(models.Model):
@@ -70,7 +74,7 @@ class Subscription(models.Model):
     status = models.CharField(
         max_length=8, 
         choices=StatusChoices.choices, 
-        default=StatusChoices.ACTIVE,
+        default=StatusChoices.DIACTIVE,
     )
     user_id = models.ForeignKey(
         User,
@@ -93,7 +97,7 @@ class Subscription(models.Model):
                 self.end_date = self.start_date + timedelta(days=360)
             self.end_date = None
 
-        if self.end_date is None and self.end_date <= timezone.now():
+        if self.end_date is not None and self.end_date <= timezone.now():
             self.status = self.StatusChoices.DIACTIVE
         
         super().save(*args, **kwargs)
