@@ -74,7 +74,7 @@ class Subscription(models.Model):
     status = models.CharField(
         max_length=8, 
         choices=StatusChoices.choices, 
-        default=StatusChoices.DIACTIVE,
+        default=StatusChoices.ACTIVE,
     )
     user_id = models.ForeignKey(
         User,
@@ -87,21 +87,38 @@ class Subscription(models.Model):
 
     def save(self, *args, **kwargs):
         if self.end_date is None:
-            if self.type == 'One_month':
-                self.end_date = self.start_date + timedelta(days=30)
-            elif self.type == 'Quarterly':
-                self.end_date = self.start_date + timedelta(days=90)
-            elif self.type == 'Six_month':
-                self.end_date = self.start_date + timedelta(days=180)
-            elif self.type == 'One_year':
-                self.end_date = self.start_date + timedelta(days=360)
-            self.end_date = None
-
+            self.set_end_date()
         if self.end_date is not None and self.end_date <= timezone.now():
             self.status = self.StatusChoices.DIACTIVE
         
         super().save(*args, **kwargs)
 
+    def set_end_date(self):
+        if self.type == 'One_month':
+            self.end_date = self.start_date + timedelta(days=30)
+        elif self.type == 'Quarterly':
+            self.end_date = self.start_date + timedelta(days=90)
+        elif self.type == 'Six_month':
+            self.end_date = self.start_date + timedelta(days=180)
+        elif self.type == 'One_year':
+            self.end_date = self.start_date + timedelta(days=360)
+
+    def renew(self):
+        if self.status == self.StatusChoices.ACTIVE:
+            if self.type == 'One_month':
+                self.end_date += timedelta(days=30)
+            elif self.type == 'Quarterly':
+                self.end_date += timedelta(days=90)
+            elif self.type == 'Six_month':
+                self.end_date += timedelta(days=180)
+            elif self.type == 'One_year':
+                self.end_date += timedelta(days=360)
+            self.save()
+
+    def cancel(self):
+        self.status = self.StatusChoices.DIACTIVE
+        self.end_date = timezone.now()
+        self.save()
 
     def __str__(self):
         return f'{self.type}: {self.status} ({self.start_date},{self.end_date})'

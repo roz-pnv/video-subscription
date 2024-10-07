@@ -13,12 +13,15 @@ from videos.serializers import CategorySerializer
 from videos.serializers import VideoSerializer
 from videos.serializers import SubscriptionSerializer
 from videos.serializers import HistorySerializer
+from videos.serializers import RenewSubscriptionSerializer
 from videos.filters import VideoFilter
 from rest_framework.permissions import AllowAny
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework import filters
+from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 
 
@@ -76,13 +79,30 @@ class VideoViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
+class SubscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = SubscriptionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Subscription.objects.filter(user_id=self.request.user)
     
+    @action(detail=True, methods=['post', 'get'])
+    def renew(self, request, pk=None):
+        subscription = self.get_object()
+        serializer = RenewSubscriptionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.update(subscription, serializer.validated_data)
+            subscription.save()
+            return Response({'status': 'subscription renewed'})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    @action(detail=True, methods=['post', 'get'])
+    def cancel(self, request, pk=None):
+        subscription = self.get_object()
+        subscription.cancel()
+        return Response({'status': 'subscription cancelled'}, status=status.HTTP_200_OK)
+
 
 class HistoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = HistorySerializer

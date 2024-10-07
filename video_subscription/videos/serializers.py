@@ -7,6 +7,7 @@ from videos.models import Category
 from videos.models import History
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from django.utils import timezone
 
 
 class ActorSerializer(serializers.ModelSerializer):
@@ -91,12 +92,43 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = [
             'id', 
+            # 'user_id',
             'type', 
             'status', 
             'start_date', 
             'end_date', 
             'created_at',
         ]
+        read_only_fields = [
+            'start_date', 
+            'end_date', 
+            'created_at',
+        ]
+    
+    def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user
+        subscription = Subscription.objects.create(
+            type=validated_data.get('type', Subscription.TypeChoices.NORMAL),
+            status=validated_data.get('status', Subscription.StatusChoices.DIACTIVE),
+            start_date = timezone.now(),
+            user_id=user
+        )
+        subscription.set_end_date()  
+        subscription.save()
+        return subscription
+
+
+class RenewSubscriptionSerializer(serializers.Serializer):
+    type = serializers.ChoiceField(choices=Subscription.TypeChoices.choices)
+    status = serializers.ChoiceField(choices=Subscription.StatusChoices.choices)
+
+    def update(self, instance, validated_data):
+        instance.type = validated_data.get('type', instance.type)
+        instance.status = validated_data.get('status', instance.status)
+        instance.renew()
+        return 
+    
 
 class HistorySerializer(serializers.ModelSerializer):
     class Meta:
