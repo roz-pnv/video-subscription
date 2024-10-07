@@ -23,5 +23,5 @@ def create_default_subscription(sender, instance, created, **kwargs):
         Subscription.objects.create(
             user_id=instance, 
             type=Subscription.TypeChoices.NORMAL, 
-            status=Subscription.StatusChoices.DIACTIVE,
+            status=Subscription.StatusChoices.ACTIVE,
         )

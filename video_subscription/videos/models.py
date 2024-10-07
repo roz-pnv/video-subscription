@@ -123,7 +123,7 @@ class History(models.Model):
         null=True,
         blank=True,
     )
-    watch_date = models.DateTimeField()
+    watch_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.user_id} watch {self.video_id} at {self.watch_date}.'
