@@ -65,7 +65,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '5/minute',
         'user': '10/minute'
-    }
+    },
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
 }
 
 ROOT_URLCONF = 'video_subscription.urls'

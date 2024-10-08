@@ -51,7 +51,7 @@ class Video(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return '%s: %d' % (self.name, self.duration)
+        return '%s: %d hour' % (self.name, self.duration)
 
 
 class Subscription(models.Model):

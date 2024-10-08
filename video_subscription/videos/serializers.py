@@ -30,13 +30,13 @@ class DirectorSerializer(serializers.ModelSerializer):
 class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
-        fields = '__all__'
+        fields = ['name']
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['name']
 
 
 class VideoSerializer(serializers.ModelSerializer):
@@ -48,12 +48,16 @@ class VideoSerializer(serializers.ModelSerializer):
             'video_url', 
             'is_subscription_needed', 
             'duration', 
-            'languages_id', 
-            'director_id', 
-            'actors_id', 
-            'categories_id', 
+            'languages', 
+            'director', 
+            'actors', 
+            'categories', 
         ]
     
+    actors = ActorSerializer(many=True, read_only=True, source='actors_id')
+    languages = LanguageSerializer(many=True, read_only=True, source='languages_id')
+    director = DirectorSerializer(read_only=True, source='director_id')
+    categories = CategorySerializer(many=True, read_only=True, source='categories_id')
     video_url = serializers.SerializerMethodField()
 
     def get_video_url(self, obj):
@@ -92,7 +96,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         fields = [
             'id', 
-            # 'user_id',
             'type', 
             'status', 
             'start_date', 

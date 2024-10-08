@@ -14,6 +14,8 @@ from videos.serializers import VideoSerializer
 from videos.serializers import SubscriptionSerializer
 from videos.serializers import HistorySerializer
 from videos.serializers import RenewSubscriptionSerializer
+from finance.models import Wallet
+from finance.models import Transaction
 from videos.filters import VideoFilter
 from rest_framework.permissions import AllowAny
 from rest_framework import viewsets
@@ -22,6 +24,7 @@ from rest_framework import filters
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 
@@ -37,21 +40,37 @@ class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [SearchFilter]
+    search_fields = ['first_name', 'last_name']
+
 
 class DirectorViewSet(viewsets.ModelViewSet):
     queryset = Director.objects.all()
     serializer_class = DirectorSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [SearchFilter]
+    search_fields = ['first_name', 'last_name']
+
 
 class LanguageViewSet(viewsets.ModelViewSet):
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [SearchFilter]
+    search_fields = ['name']
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [
+        DjangoFilterBackend, 
+        filters.SearchFilter,
+    ]
+    filter_backends = [SearchFilter]
+    search_fields = ['name']
+
 
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
@@ -67,15 +86,17 @@ class VideoViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         user = request.user
+        serializer = self.get_serializer(instance)
 
-        if user.is_authenticated:
+        video_url = serializer.data['video_url']
+
+        if user.is_authenticated and video_url != 'You need to purchase a subscription to view the video.':
            
             History.objects.create(
                 user_id=user,
                 video_id=instance,
             )
 
-        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 
@@ -90,12 +111,46 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     def renew(self, request, pk=None):
         subscription = self.get_object()
         serializer = RenewSubscriptionSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.update(subscription, serializer.validated_data)
-            subscription.save()
-            return Response({'status': 'subscription renewed'})
+
+        wallet = Wallet.objects.get(user_id=subscription.user_id)
+        
+        subscription_prices = {
+            'One_month': 100000.00,
+            'Quarterly': 250000.00,
+            'Six_month': 450000.00,
+            'One_year': 800000.00,
+        }
+
+        subscription_price = subscription_prices.get(subscription.type, 0.00)
+
+        if wallet.balance >= subscription_price:
+            if serializer.is_valid():
+                serializer.update(subscription, serializer.validated_data)
+                subscription.save()
+
+                wallet.balance -= subscription_price
+                wallet.save()
+
+                transaction = Transaction.objects.create(
+                    wallet_id=wallet,
+                    status=Transaction.StatusChoices.SUCCESS,
+                    type=Transaction.TransactionTypeChoices.WITHDRAWAL,
+                    amount=subscription_price
+                )
+                return Response(
+                    {
+                        'status': 'subscription renewed', 
+                        'new_balance': wallet.balance,
+                        'transaction_code': transaction.id,
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'Insufficient balance'}, status=status.HTTP_400_BAD_REQUEST)
+
         
     @action(detail=True, methods=['post', 'get'])
     def cancel(self, request, pk=None):
