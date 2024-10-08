@@ -13,8 +13,8 @@ from rest_framework import viewsets
 from users.serializers import SignUpSerializer
 from users.serializers import ChangePasswordSerializer
 from users.serializers import UpdateProfileSerializer
-
 from rest_framework import permissions
+from django.urls import reverse
 
 
 class IsOwnerOrAdmin(permissions.BasePermission):
@@ -43,9 +43,11 @@ class UpdateInformationViewSet(viewsets.ViewSet):
     
     def list(self, request):
         data = {
-            'update_profile_url': request.build_absolute_uri('/api/auth/update_profile/'),
-            'change_password_url': request.build_absolute_uri('/api/auth/change_password/'),
-            'wallet_and_transaction_url': request.build_absolute_uri('/api/auth/finance/'),
+            'update_profile_url': request.build_absolute_uri(reverse('update_profile')),
+            'change_password_url': request.build_absolute_uri(reverse('change_password')),
+            'wallet': request.build_absolute_uri(reverse('wallet-detail', kwargs={'pk': request.user.wallet.id})),
+            'transactions_history': request.build_absolute_uri(reverse('transaction-list')),
+            'inventory_increase': request.build_absolute_uri(reverse('amount-request')),
         }
         return Response(data)
     

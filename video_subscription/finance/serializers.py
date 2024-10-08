@@ -15,9 +15,19 @@ class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = [
-            'wallet', 
-            'subscription', 
+            'wallet_id', 
+            'subscription_id', 
             'status', 
             'type', 
             'amount',
         ] 
+
+
+class DepositTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['amount']
+
+
+class VerificationSerializer(serializers.Serializer):
+    verification_code = serializers.CharField(max_length=6)

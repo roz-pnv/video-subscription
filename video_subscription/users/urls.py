@@ -12,7 +12,8 @@ from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register(r'sign_up', SignUpViewSet, basename='sign_up')
-router.register(r'update_and_finance', UpdateInformationViewSet, basename='update')
+router.register(r'Personal_information', UpdateInformationViewSet, basename='personal_information')
+
 
 urlpatterns = [
     path('', include(router.urls)),

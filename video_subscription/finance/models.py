@@ -13,7 +13,7 @@ class Wallet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.user_id
+        return f'{self.user_id}'
 
 
 class Transaction(models.Model):
@@ -33,6 +33,8 @@ class Transaction(models.Model):
     subscription_id = models.ForeignKey(
         Subscription,
         on_delete=models.CASCADE,
+        null=True, 
+        blank=True,
     )
     status = models.CharField(max_length=7, choices=StatusChoices.choices, default=StatusChoices.PENDING)
     type = models.CharField(max_length=10, choices=TransactionTypeChoices.choices)
