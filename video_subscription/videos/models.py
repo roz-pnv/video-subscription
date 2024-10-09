@@ -37,7 +37,7 @@ class Category(models.Model):
 class Video(models.Model):
     description = models.TextField()
     name = models.CharField(max_length=255)
-    video_url = models.URLField(max_length=2048)
+    video_url = models.URLField(max_length=2048, blank=True)
     is_subscription_needed = models.BooleanField(default=False)
     duration = models.IntegerField()
     languages_id = models.ManyToManyField(Language)
@@ -49,6 +49,11 @@ class Video(models.Model):
     actors_id = models.ManyToManyField(Actor)
     categories_id = models.ManyToManyField(Category)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.video_url:
+            self.video_url = f'http://127.0.0.1:8000/api/videos/{self.pk}/room'
+        super(Video, self).save(*args, **kwargs)
 
     def __str__(self):
         return '%s: %d hour' % (self.name, self.duration)
@@ -144,16 +149,3 @@ class History(models.Model):
 
     def __str__(self):
         return f'{self.user_id} watch {self.video_id} at {self.watch_date}.'
-
-
-class Comment(models.Model):
-    video_id = models.ForeignKey(
-        Video,
-        on_delete=models.CASCADE,
-    )
-    user_id = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-    )
-    comment = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)

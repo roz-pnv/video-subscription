@@ -21,4 +21,5 @@ router.register(r'history', HistoryViewSet, basename='history')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('video/1/room/', include('public_chat.urls')), 
 ]

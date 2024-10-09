@@ -15,5 +15,5 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/auth/', include('users.urls')),
-    path('api/videos/', include('videos.urls')), 
+    path('api/videos/', include('videos.urls')),
 ]

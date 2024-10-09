@@ -88,7 +88,7 @@ class VideoViewSet(viewsets.ModelViewSet):
         user = request.user
         serializer = self.get_serializer(instance)
 
-        video_url = serializer.data['video_url']
+        video_url = f'http://127.0.0.1:8000/api/videos/video/{instance.id}/room'
 
         if user.is_authenticated and video_url != 'You need to purchase a subscription to view the video.':
            

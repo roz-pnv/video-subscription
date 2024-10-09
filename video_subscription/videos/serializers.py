@@ -53,6 +53,10 @@ class VideoSerializer(serializers.ModelSerializer):
             'actors', 
             'categories', 
         ]
+        read_only_fields = [
+            'video_url', 
+        ]
+    
     
     actors = ActorSerializer(many=True, read_only=True, source='actors_id')
     languages = LanguageSerializer(many=True, read_only=True, source='languages_id')

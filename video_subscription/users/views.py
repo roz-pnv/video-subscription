@@ -60,8 +60,6 @@ class SignUpViewSet(viewsets.ModelViewSet):
     )
     serializer_class = SignUpSerializer
 
-    SignUpSerializer
-
     def get_permissions(self):
         if self.action in ['retrieve', 'list', 'destroy']:
             self.permission_classes = [IsAuthenticated, IsOwnerOrAdmin]
