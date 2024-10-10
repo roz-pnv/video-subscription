@@ -58,6 +58,17 @@ class Video(models.Model):
     def __str__(self):
         return '%s: %d hour' % (self.name, self.duration)
 
+class VideoActor(models.Model):
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    actor = models.ForeignKey(Actor, on_delete=models.CASCADE)
+
+class VideoCategory(models.Model):
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+
+class VideoLanguage(models.Model):
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    language = models.ForeignKey(Language, on_delete=models.CASCADE)
 
 class Subscription(models.Model):
     class TypeChoices(models.TextChoices):

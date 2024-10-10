@@ -22,5 +22,5 @@ router.register(r'history', HistoryViewSet, basename='history')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('video/<video_id>/rate_video/rate/', RateVideoView.as_view(), name='rate-video')
+    path('video/<video_id>/rate_video/rate/', RateVideoView.as_view(), name='rate-video'),
 ]

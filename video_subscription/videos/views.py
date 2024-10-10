@@ -79,7 +79,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['name']
 
 
-class VideoViewSet(viewsets.ModelViewSet):
+class VideoViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
     permission_classes = [IsAdminOrReadOnly]

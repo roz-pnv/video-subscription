@@ -9,6 +9,7 @@ from videos.models import Rating
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.utils import timezone
+from django.db.models import Avg
 
 
 class ActorSerializer(serializers.ModelSerializer):
@@ -46,6 +47,7 @@ class VideoSerializer(serializers.ModelSerializer):
         fields = [
             'name',
             'description',
+            'average_rating',
             'video_url', 
             'is_subscription_needed', 
             'duration', 
@@ -56,14 +58,64 @@ class VideoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'video_url', 
+            'average_rating',
         ]
     
-    
-    actors = ActorSerializer(many=True, read_only=True, source='actors_id')
-    languages = LanguageSerializer(many=True, read_only=True, source='languages_id')
-    director = DirectorSerializer(read_only=True, source='director_id')
-    categories = CategorySerializer(many=True, read_only=True, source='categories_id')
+    average_rating = serializers.SerializerMethodField()
+    actors = ActorSerializer(Actor.objects.all(), many=True, source='actors_id')
+    languages = LanguageSerializer(Language.objects.all(), many=True, source='languages_id')
+    director = DirectorSerializer(Director.objects.all(), source='director_id')
+    categories = CategorySerializer(Category.objects.all(), many=True, source='categories_id')
     video_url = serializers.SerializerMethodField()
+
+    
+    # def create(self, validated_data):
+    #     actors_data = validated_data.pop('actors', [])
+    #     categories_data = validated_data.pop('categories', [])
+    #     languages_data = validated_data.pop('languages', [])
+        
+    #     video = Video.objects.create(**validated_data)
+        
+    #     for actor_data in actors_data:
+    #         actor, created = Actor.objects.get_or_create(**actor_data)
+    #         video.actors_id.add(actor)
+        
+    #     for category_data in categories_data:
+    #         category, created = Category.objects.get_or_create(**category_data)
+    #         video.categories_id.add(category)
+
+    #     for language_data in languages_data:
+    #         language, created = Language.objects.get_or_create(**language_data)
+    #         video.languages_id.add(language)
+        
+    #     video.save()
+    #     return video
+    
+
+    # def update(self, instance, validated_data):
+    #     actors_data = validated_data.pop('actors', [])
+    #     categories_data = validated_data.pop('categories', [])
+    #     languages_data = validated_data.pop('languages', [])
+
+    #     for attr, value in validated_data.items():
+    #         setattr(instance, attr, value)
+    #     instance.save()
+
+    #     instance.actors.clear()
+    #     for actor_data in actors_data:
+    #         actor, created = Actor.objects.get_or_create(**actor_data)
+    #         instance.actors_id.add(actor)
+
+    #     instance.categories.clear()
+    #     for category_data in categories_data:
+    #         category, created = Category.objects.get_or_create(**category_data)
+    #         instance.categories_id.add(category)
+
+    #     instance.languages.clear()
+    #     for language_data in languages_data:
+    #         language, created = Language.objects.get_or_create(**language_data)
+    #         instance.languages_id.add(language)
+
 
     def get_video_url(self, obj):
         request = self.context.get('request')
@@ -94,6 +146,11 @@ class VideoSerializer(serializers.ModelSerializer):
                 return 'You need to purchase a subscription to view the video.'
         
         return obj.video_url
+    
+
+    def get_average_rating(self, obj):
+        avg_rating = obj.ratings.aggregate(Avg('score'))['score__avg']
+        return avg_rating if avg_rating is not None else 0 
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
