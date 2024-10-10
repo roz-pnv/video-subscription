@@ -6,6 +6,7 @@ from videos.models import Category
 from videos.models import Video
 from videos.models import Subscription
 from videos.models import History
+from videos.models import Rating
 from videos.serializers import ActorSerializer
 from videos.serializers import DirectorSerializer
 from videos.serializers import LanguageSerializer
@@ -14,17 +15,23 @@ from videos.serializers import VideoSerializer
 from videos.serializers import SubscriptionSerializer
 from videos.serializers import HistorySerializer
 from videos.serializers import RenewSubscriptionSerializer
+from videos.serializers import RatingSerializer
 from finance.models import Wallet
 from finance.models import Transaction
 from videos.filters import VideoFilter
 from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework import filters
 from rest_framework import status
+from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 
 
@@ -86,7 +93,7 @@ class VideoViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         user = request.user
-        serializer = self.get_serializer(instance)
+        serializer_class = self.get_serializer(instance)
 
         video_url = f'http://127.0.0.1:8000/chatroom/{instance.name}/'
 
@@ -97,7 +104,21 @@ class VideoViewSet(viewsets.ModelViewSet):
                 video_id=instance,
             )
 
-        return Response(serializer.data)
+        return Response(serializer_class.data)
+    
+    @action(detail=True, methods=['post', 'get'], permission_classes=[IsAuthenticated])
+    def rate_video(self, request, pk=None):
+        video = self.get_object()
+        user = request.user
+        serializer_class = RatingSerializer(data=request.data)
+
+        if Rating.objects.filter(user=user, video=video).exists():
+            return Response({"detail": "You have already rated this video."}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = {
+            'rate-video': request.build_absolute_uri('rate'),
+        }
+        return Response(data)
 
 
 class SubscriptionViewSet(viewsets.ModelViewSet):
@@ -165,4 +186,23 @@ class HistoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return History.objects.filter(user_id=self.request.user)
+
+
+class RateVideoView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = RatingSerializer
+
+    def post(self, request, video_id):
+        user = request.user
+        video = get_object_or_404(Video, id=video_id) 
+
+        if Rating.objects.filter(user=user, video=video).exists():
+            raise ValidationError("You have already rated this video.")
+
+        serializer = RatingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=user, video=video)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     

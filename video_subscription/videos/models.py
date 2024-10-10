@@ -140,12 +140,19 @@ class History(models.Model):
         on_delete=models.SET_NULL,
         null=True,
     )
-    rating = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(5)],
-        null=True,
-        blank=True,
-    )
     watch_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.user_id} watch {self.video_id} at {self.watch_date}.'
+    
+
+class Rating(models.Model):
+    video = models.ForeignKey(Video, related_name='ratings', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='ratings', on_delete=models.CASCADE)
+    score = models.IntegerField()
+
+    class Meta:
+        unique_together = ('video', 'user')
+
+    def __str__(self):
+        return f'{self.user} rated {self.video} with {self.score}'

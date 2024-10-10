@@ -5,6 +5,7 @@ from videos.models import Director
 from videos.models import Language
 from videos.models import Category
 from videos.models import History
+from videos.models import Rating
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from django.utils import timezone
@@ -154,3 +155,17 @@ class HistorySerializer(serializers.ModelSerializer):
     )
 
 
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rating
+        fields = [
+            'id', 
+            'video_id', 
+            'user_id', 
+            'score',
+        ]
+        read_only_fields = [
+            'user_id', 
+            'video_id', 
+            'created_at',
+        ]

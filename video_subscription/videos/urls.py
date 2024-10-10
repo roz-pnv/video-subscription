@@ -7,6 +7,7 @@ from videos.views import LanguageViewSet
 from videos.views import CategoryViewSet
 from videos.views import SubscriptionViewSet
 from videos.views import HistoryViewSet
+from videos.views import RateVideoView
 
 
 router = DefaultRouter()
@@ -21,4 +22,5 @@ router.register(r'history', HistoryViewSet, basename='history')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('video/<video_id>/rate_video/rate/', RateVideoView.as_view(), name='rate-video')
 ]
