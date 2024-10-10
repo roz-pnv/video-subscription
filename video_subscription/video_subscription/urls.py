@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from users.views import HomeViewSet
-
+from public_chat.views import ChatView
 router = DefaultRouter()
 router.register(r'', HomeViewSet, basename='home') 
 
@@ -16,4 +16,5 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/auth/', include('users.urls')),
     path('api/videos/', include('videos.urls')),
+    path('chatroom/<chatroom_name>/', ChatView.as_view(), name='room')
 ]

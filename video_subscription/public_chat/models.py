@@ -10,6 +10,11 @@ class PublicChatRoom(models.Model):
         unique=True,
         blank=False,
     )
+    user_id = models.ManyToManyField(
+        User,
+        related_name='online_in_groups', 
+        blank=True,
+    )
     video_id = models.OneToOneField(
         Video,
         on_delete=models.CASCADE,

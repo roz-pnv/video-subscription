@@ -16,10 +16,10 @@ class ChatView(LoginRequiredMixin, TemplateView, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        chat_room = get_object_or_404(PublicChatRoom, title='public_chat')
+        chat_room = get_object_or_404(PublicChatRoom, title=self.kwargs['chatroom_name'])
         chat_messages = chat_room.chat_messeges.all()
         context['chat_messages'] = chat_messages
-        context['form'] = self.get_form()  # Include the form in context
+        context['form'] = self.get_form()  
         return context
 
     def post(self, request, *args, **kwargs):
